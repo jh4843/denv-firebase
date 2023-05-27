@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
-import {mkdirp} from "mkdirp";
+import * as mkdirp from "mkdirp";
 import * as admin from "firebase-admin";
-import {spawn} from "child-process-promise";
+import * as spawn from "child-process-promise";
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
@@ -28,24 +28,23 @@ const THUMB_PREFIX = "thumb_";
  * After the thumbnail has been generated and uploaded to Cloud Storage,
  * we write the public URL to the Firebase Realtime Database.
  */
-exports.generateThumbnail = functions
-  .region("asia-northeast3")
-  .storage.object()
+exports.generateThumbnail = functions.storage
+  .object()
   .onFinalize(async object => {
     // File and directory paths.
-    const filePath = object.name as string;
-    const contentType = object.contentType as string; // This is the image MIME type
+    const filePath = object.name;
+    const contentType = object.contentType; // This is the image MIME type
     const fileDir = path.dirname(filePath as string);
     const fileName = path.basename(filePath as string);
     const thumbFilePath = path.normalize(
       path.join(fileDir, `${THUMB_PREFIX}${fileName}`),
     );
-    const tempLocalFile = path.join(os.tmpdir(), filePath);
+    const tempLocalFile = path.join(os.tmpdir(), filePath as string);
     const tempLocalDir = path.dirname(tempLocalFile);
     const tempLocalThumbFile = path.join(os.tmpdir(), thumbFilePath);
 
     // Exit if this is triggered on a file that is not an image.
-    if (!contentType.startsWith("image/")) {
+    if (!contentType?.startsWith("image/")) {
       return functions.logger.log("This is not an image.");
     }
 
@@ -56,7 +55,7 @@ exports.generateThumbnail = functions
 
     // Cloud Storage files.
     const bucket = admin.storage().bucket(object.bucket);
-    const file = bucket.file(filePath);
+    const file = bucket.file(filePath as string);
     const thumbFile = bucket.file(thumbFilePath);
     const metadata = {
       contentType: contentType,
@@ -65,12 +64,12 @@ exports.generateThumbnail = functions
     };
 
     // Create the temp directory where the storage file will be downloaded.
-    await mkdirp(tempLocalDir);
+    await mkdirp.mkdirp(tempLocalDir);
     // Download file from bucket.
     await file.download({destination: tempLocalFile});
     functions.logger.log("The file has been downloaded to", tempLocalFile);
     // Generate a thumbnail using ImageMagick.
-    await spawn(
+    await spawn.spawn(
       "convert",
       [
         tempLocalFile,

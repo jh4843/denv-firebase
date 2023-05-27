@@ -15,11 +15,9 @@
 - Proejct 생성
   - firebase projects:create (project-name)
 
+# Example (denv-funcs)
 
-# Storage
- - rules 변경
-   - 인증된 사용자만: allow read, write: if request.auth != null;
-
-# Database
- - rules 변경
-   - 인증된 사용자만: allow read, write: if request.auth != null;
+1. FireAuth
+   1. Email login
+   2.
+2.
